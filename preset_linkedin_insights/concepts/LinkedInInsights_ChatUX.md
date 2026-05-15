@@ -2,72 +2,74 @@
 
 Chat-only UX templates for Extella agent. Referenced from `LinkedInInsights_Master` by **exact slug**. All user-visible prompts may be localized by the agent, but **machine tokens** below stay ASCII.
 
-## Invocation (S0)
+## Formatting rules (critical)
 
-**Trigger:** user intends to run the preset and includes the exact slug **`LinkedInInsights_Master`** (see master concept for EN/RU verb examples: `run`, `start`, `запусти`, `старт`, …).
+- **Do not** wrap user-facing status lines in markdown **fenced code blocks** (no triple backticks). Extella chat may mislabel fences as `sql` or other languages and it looks broken.
+- Use **plain paragraphs**, optional **bold labels**, or markdown **blockquotes** (`>`) for multi-line templates.
 
-**Do not** require a fixed English-only phrase; Russian commands are first-class.
+## Invocation + topic (S0 + S1 in one assistant turn)
 
-If the message matches the trigger, reply immediately with S0 below (no extra preamble).
+**Trigger:** user message contains the exact slug **`LinkedInInsights_Master`** plus run intent (`run`, `start`, `запусти`, `старт`, …). See `LinkedInInsights_Master` for examples.
 
-Agent replies:
+**On trigger, in the SAME reply (no waiting step):**
 
-```
-[LinkedInInsights] Starting preset run.
-Scope: build one Excel workbook of LinkedIn post rows from your clarifications.
-Reply CONFIRM to proceed to topic clarification, or CANCEL.
-```
+1. Acknowledge the preset is running (2–4 short lines, plain text).
+2. **Immediately** continue with the S1 topic questions below. **Do not** ask for `CONFIRM` / `CANCEL` before topic clarification — the user already started the preset with the run command.
+3. Only if the message is ambiguous (slug typo, no run intent), ask **one** short clarification instead of starting.
 
-## Topic clarification (S1)
+**Example opening (adapt wording; keep structure, no code fences):**
 
-Ask for goal, niche, exclusions. If vague, propose examples:
+> **[LinkedInInsights]** Preset **LinkedInInsights_Master** is running.  
+> I will build one Excel workbook of post rows (manual mode in v1: you paste or we structure post data together).  
+> **What should we look for?** Describe the topic, goal, niche, and exclusions in one message.  
+> If unsure, pick one of the example lines below or edit it.
 
-```
+Then continue with S1 examples (same message).
+
+## Topic clarification (S1) — examples block
+
+If the user’s topic is vague, append **numbered example queries** (plain lines, not fenced):
+
 Example queries you can copy/edit:
-1) ...
-2) ...
-3) ...
-Paste your final topic as one paragraph.
-```
+
+1. …  
+2. …  
+3. …  
+
+Ask them to reply with one paragraph as the final topic.
 
 ## Filters (S2)
 
-Load filter menu from `LinkedInInsights_FilterCatalog` for the active `source_mode` (v1 default `manual`).
+Load filter menu from `LinkedInInsights_FilterCatalog` for the active `source_mode` (v1 default `manual`). Plain text or blockquotes only.
 
 ## Confirm QuerySpec (S3)
 
-Agent must print a **RUN CONFIG** block every time after S3:
+Only **here** (after topic + filters are agreed) ask for confirmation before calling experts that write files.
 
-```
-=== RUN CONFIG ===
-output_path: /tmp/linkedin_insights_<run_id>.xlsx
-source_mode: manual
-query_spec_json: {...one line JSON...}
-==================
-Reply CONFIRM to start collection, or EDIT: <changes>
-```
+Print a **RUN CONFIG** summary as **plain lines** (no triple backticks), for example:
 
-After user confirms, agent must repeat `output_path` at every progress message in S4.
+**RUN CONFIG**  
+output_path: /tmp/linkedin_insights_<run_id>.xlsx  
+source_mode: manual  
+query_spec_json: {…single-line JSON…}  
+
+Then ask: reply **CONFIRM** to start collection, or **EDIT:** followed by changes.
+
+After the user confirms, repeat `output_path` in every progress line in S4.
 
 ## Execution progress (S4)
 
-After each successful append:
+After each successful append, one plain line, for example:
 
-```
-[LinkedInInsights] checkpoint ok | batch=# | rows_total=NN | output_path=...
-```
+**[LinkedInInsights]** checkpoint ok | batch=3 | rows_total=45 | output_path=/path/to/file.xlsx
 
 ## Delivery (S5)
 
-```
-[LinkedInInsights] DONE | rows_total=NN | output_path=...
-If your client supports file download from worker path, use that path; if using Desktop target, the path is on your machine.
-```
+**[LinkedInInsights]** DONE | rows_total=NN | output_path=…  
+If the client cannot download from the worker path, explain where the file lives for Desktop `target` runs.
 
 ## Failure partial success
 
-```
-[LinkedInInsights] FAILED after last good checkpoint.
-Last known output_path=...
-Error: <short message>
-```
+**[LinkedInInsights]** FAILED after last good checkpoint.  
+Last known output_path=…  
+Error: short message

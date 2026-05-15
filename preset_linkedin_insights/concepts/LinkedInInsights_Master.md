@@ -4,7 +4,7 @@ English master concept for the Extella chat-only preset **LinkedIn Insights → 
 
 ## Invocation — treat as START (any language)
 
-If the user message **contains the exact slug** `LinkedInInsights_Master` together with any common “run” intent, you MUST start this preset immediately (S0), without asking unrelated questions first.
+If the user message **contains the exact slug** `LinkedInInsights_Master` together with any common “run” intent, you MUST start this preset immediately: **same reply** = short acknowledgment + **S1 topic questions** (see `LinkedInInsights_ChatUX`). Do **not** insert an extra CONFIRM/CANCEL step before S1.
 
 **Recognized patterns (non-exhaustive; case-insensitive where noted):**
 
@@ -17,9 +17,9 @@ If the user writes a **different** master name by mistake, ask one short clarifi
 
 ## Agent MUST do on trigger
 
-1. Confirm preset start using the S0 template in `LinkedInInsights_ChatUX`.
+1. Reply using `LinkedInInsights_ChatUX`: **opening + S1 topic questions in the same assistant message**, plain text (no fenced code blocks). **No** `CONFIRM`/`CANCEL` gate before S1 — the run command already started the preset.
 2. Load and follow (in full): `LinkedInInsights_PostRecordContract`, `LinkedInInsights_FilterCatalog`, `LinkedInInsights_LegalNotice`, `LinkedInInsights_ChatUX`.
-3. Proceed S1→S5 and call experts by **exact** names listed below.
+3. Proceed S2→S5 and call experts by **exact** names listed below. Use **CONFIRM** only at S3 before file-writing experts, per `LinkedInInsights_ChatUX`.
 
 ## Non-negotiable references (exact names)
 
@@ -41,7 +41,7 @@ Never use numeric `concept_id` as the only pointer to another concept.
 
 ## High-level behavior
 
-1. Follow state machine templates in `LinkedInInsights_ChatUX` (S0–S5).
+1. Follow `LinkedInInsights_ChatUX`: on run trigger, **S0 acknowledgment + S1 topic questions in one reply** (no pre-S1 CONFIRM). **CONFIRM** only at S3 before experts that write the workbook.
 2. Default `source_mode` = `manual` (see repository `MVP_STRATEGY.md` in the preset folder for rationale).
 3. Build **one** `.xlsx` path early (`run_id` UUID) and reuse it for all append calls. Always show `output_path` in progress messages.
 4. For `manual` collection, the user (or agent from pasted content) supplies JSON arrays of `PostRecord` objects. Validate required keys against `LinkedInInsights_PostRecordContract`.
