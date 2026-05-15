@@ -14,7 +14,7 @@ Chat-only workflow driven by the English master concept **`LinkedInInsights_Mast
 | [concepts/LinkedInInsights_ChatUX.md](concepts/LinkedInInsights_ChatUX.md) | S0–S5 chat templates (`RUN CONFIG`, progress lines) |
 | [experts/](experts/) | `fython` expert bodies (`*.py`) |
 | [scripts/bootstrap_experts.py](scripts/bootstrap_experts.py) | Publishes experts to Extella |
-| [scripts/publish_concepts.py](scripts/publish_concepts.py) | `concept/search` → dedupe → `concept/update` (or `concept/add`); see script docstring |
+| [scripts/publish_concepts.py](scripts/publish_concepts.py) | `concept/list` (full scan) → dedupe → `concept/update` / `remove` / `add` |
 | [scripts/upload_concepts.py](scripts/upload_concepts.py) | Alias: runs `publish_concepts.py` |
 | [scripts/requirements-scripts.txt](scripts/requirements-scripts.txt) | `requests` for helper scripts |
 
@@ -57,7 +57,9 @@ python3 preset_linkedin_insights/scripts/upload_concepts.py
 
 ## Concepts import notes
 
-Each `concepts/*.md` must contain a line `# Concept_Slug: <ExactName>` (see files). Duplicates with the same slug: script keeps the **highest** `concept_id`, removes older ids, then updates the kept row with the file from disk.
+Each `concepts/*.md` must contain a line `# Concept_Slug: <ExactName>` (see files). Duplicates are found via **`POST /api/concept/list`** (text contains that marker). The script keeps the **highest** `concept_id`, **`POST /api/concept/remove`** on older ids, then **`POST /api/concept/update`** on the survivor.
+
+## Smoke test (manual mode)
 
 1. Run `linkedin_insights_init_excel_workbook` with a chosen `output_path`.
 2. Run `linkedin_insights_collect_posts_batch` with `manual_posts_json` containing 1–3 example `PostRecord` objects.

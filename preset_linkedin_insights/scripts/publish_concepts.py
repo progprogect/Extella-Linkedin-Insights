@@ -3,13 +3,13 @@
 
 For each Markdown file in concepts/:
   1. Read `Concept_Slug: <Name>` from the file (required first-line pattern).
-  2. POST /api/concept/search to find existing rows with that slug in the body.
-  3. If multiple matches: keep the **newest** (highest concept_id), POST /api/concept/remove
-     for every older duplicate (same slug marker).
+  2. POST /api/concept/list once (cached), then filter rows whose `concept_text` contains `Concept_Slug: <Name>`
+     (full scan so **all** duplicates are found; semantic search alone can miss copies).
+  3. If multiple matches: keep the **newest** (highest concept_id), POST /api/concept/remove for every older id.
   4. If at least one remains: POST /api/concept/update with full file text.
   5. If none: POST /api/concept/add.
 
-Uses headers X-Profile-Id and X-Agent-Id (see Concept_update.md / api reference).
+Uses `POST /api/concept/list` for duplicate detection (full scan), then `POST /api/concept/update` / `remove` / `add` as in [Concept_update.md](../../Concept_update.md).
 
 Environment: EXTELLA_TOKEN or EXTELLA_API_TOKEN, optional EXTELLA_API_URL, EXTELLA_PROFILE_ID, EXTELLA_AGENT_ID.
 
@@ -64,18 +64,18 @@ def extract_slug(text: str) -> str:
     return m.group(1).strip()
 
 
-def concept_search(base: str, headers: dict, query: str, limit: int = 30) -> list[dict]:
+def concept_list_all(base: str, headers: dict) -> list[dict]:
     r = requests.post(
-        f"{base}/api/concept/search",
+        f"{base}/api/concept/list",
         headers=headers,
-        json={"query": query, "limit": limit},
-        timeout=60,
+        json={},
+        timeout=180,
     )
     if r.status_code != 200:
-        raise RuntimeError(f"concept/search HTTP {r.status_code}: {r.text[:400]}")
+        raise RuntimeError(f"concept/list HTTP {r.status_code}: {r.text[:400]}")
     data = r.json()
     if data.get("status") != "success":
-        raise RuntimeError(f"concept/search bad payload: {data}")
+        raise RuntimeError(f"concept/list bad payload: {data}")
     return list(data.get("results") or [])
 
 
@@ -128,20 +128,11 @@ def matching_rows(results: list[dict], slug: str) -> list[dict]:
     return out
 
 
-def publish_file(base: str, headers: dict, path: Path, dry_run: bool) -> None:
+def publish_file(base: str, headers: dict, path: Path, dry_run: bool, all_rows: list[dict]) -> None:
     text = path.read_text(encoding="utf-8")
     slug = extract_slug(text)
-    marker = f"Concept_Slug: {slug}"
 
-    # Semantic search by slug (stable anchor inside the concept body)
-    results = concept_search(base, headers, slug, limit=40)
-    matches = matching_rows(results, slug)
-
-    # If search missed (embedding drift), try a second query with explicit marker
-    if not matches:
-        results2 = concept_search(base, headers, marker, limit=40)
-        matches = matching_rows(results2, slug)
-
+    matches = matching_rows(all_rows, slug)
     matches.sort(key=lambda r: int(r["concept_id"]), reverse=True)
 
     if dry_run:
@@ -187,9 +178,13 @@ def main() -> int:
         print("No concepts found", file=sys.stderr)
         return 1
 
+    print("Fetching concept/list …")
+    all_rows = concept_list_all(base, headers)
+    print("rows:", len(all_rows))
+
     for path in files:
         try:
-            publish_file(base, headers, path, dry_run=args.dry_run)
+            publish_file(base, headers, path, dry_run=args.dry_run, all_rows=all_rows)
         except Exception as e:
             print(f"FAIL {path.name}: {e}", file=sys.stderr)
             return 1
