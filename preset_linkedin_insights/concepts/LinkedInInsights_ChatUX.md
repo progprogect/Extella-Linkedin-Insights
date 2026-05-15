@@ -4,7 +4,11 @@ Chat-only UX templates for Extella agent. Referenced from `LinkedInInsights_Mast
 
 ## Invocation (S0)
 
-User message pattern: `run LinkedInInsights_Master` (case-insensitive `run` / `start`).
+**Trigger:** user intends to run the preset and includes the exact slug **`LinkedInInsights_Master`** (see master concept for EN/RU verb examples: `run`, `start`, `запусти`, `старт`, …).
+
+**Do not** require a fixed English-only phrase; Russian commands are first-class.
+
+If the message matches the trigger, reply immediately with S0 below (no extra preamble).
 
 Agent replies:
 

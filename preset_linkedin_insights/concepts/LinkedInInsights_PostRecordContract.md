@@ -62,3 +62,7 @@ Before appending, `linkedin_insights_append_posts_to_xlsx` reads all existing va
 - `linkedin_insights_collect_posts_batch`
 - `linkedin_insights_append_posts_to_xlsx`
 - `linkedin_insights_rank_posts`
+
+## Extella `fython` entrypoint rule (critical)
+
+In each expert file, the **first top-level `def`** must be the expert function whose name equals `expert_name`. Put private helpers **after** that function. If helpers appear first, Extella will call the wrong function and pass expert kwargs to it (runtime error).

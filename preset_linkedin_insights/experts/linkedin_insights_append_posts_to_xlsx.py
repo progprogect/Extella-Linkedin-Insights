@@ -5,23 +5,6 @@ include("import datetime", [])
 include("from urllib.parse import urlparse, urlunparse", [])
 include("from openpyxl import load_workbook", ["extella-pip install openpyxl"])
 
-def _normalize_post_url(url: str) -> str:
-    u = (url or "").strip()
-    if not u:
-        return ""
-    p = urlparse(u)
-    netloc = (p.netloc or "").lower()
-    path = (p.path or "").rstrip("/") or "/"
-    scheme = (p.scheme or "https").lower()
-    return urlunparse((scheme, netloc, path, "", "", ""))
-
-
-def _safe_int(value, default: int = 0) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
-
 def linkedin_insights_append_posts_to_xlsx(
     output_path: str = "",
     posts_json: str = "[]",
@@ -110,3 +93,21 @@ def linkedin_insights_append_posts_to_xlsx(
         "skipped_due_to_cap": skipped_cap,
         "rows_total": max(total_rows, 0),
     }
+
+
+def _normalize_post_url(url: str) -> str:
+    u = (url or "").strip()
+    if not u:
+        return ""
+    p = urlparse(u)
+    netloc = (p.netloc or "").lower()
+    path = (p.path or "").rstrip("/") or "/"
+    scheme = (p.scheme or "https").lower()
+    return urlunparse((scheme, netloc, path, "", "", ""))
+
+
+def _safe_int(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default

@@ -3,23 +3,6 @@ include("import json", [])
 include("import datetime", [])
 include("from urllib.parse import urlparse, urlunparse", [])
 
-def _normalize_post_url(url: str) -> str:
-    u = (url or "").strip()
-    if not u:
-        return ""
-    p = urlparse(u)
-    netloc = (p.netloc or "").lower()
-    path = (p.path or "").rstrip("/") or "/"
-    scheme = (p.scheme or "https").lower()
-    return urlunparse((scheme, netloc, path, "", "", ""))
-
-
-def _safe_int(value, default: int = 0) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
-
 def linkedin_insights_collect_posts_batch(
     source_mode: str = "manual",
     query_spec_json: str = "{}",
@@ -115,3 +98,21 @@ def linkedin_insights_collect_posts_batch(
         "batch_cursor": batch_cursor or "",
         "source_mode": mode,
     }
+
+
+def _normalize_post_url(url: str) -> str:
+    u = (url or "").strip()
+    if not u:
+        return ""
+    p = urlparse(u)
+    netloc = (p.netloc or "").lower()
+    path = (p.path or "").rstrip("/") or "/"
+    scheme = (p.scheme or "https").lower()
+    return urlunparse((scheme, netloc, path, "", "", ""))
+
+
+def _safe_int(value, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default

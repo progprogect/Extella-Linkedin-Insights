@@ -2,10 +2,6 @@ $extens("include.py")
 include("import json", [])
 include("import re", [])
 
-def _tokenize(q: str):
-    q = (q or "").lower()
-    return [t for t in re.split(r"[^a-z0-9_+-]+", q) if len(t) >= 3]
-
 def linkedin_insights_rank_posts(
     posts_json: str = "[]",
     query_text: str = "",
@@ -35,3 +31,8 @@ def linkedin_insights_rank_posts(
     ranked = sorted(posts, key=lambda p: score(p) if isinstance(p, dict) else 0, reverse=True)
     print("[2/2] ranked:", len(ranked))
     return {"status": "success", "posts": ranked}
+
+
+def _tokenize(q: str):
+    q = (q or "").lower()
+    return [t for t in re.split(r"[^a-z0-9_+-]+", q) if len(t) >= 3]
