@@ -14,7 +14,8 @@ Chat-only workflow driven by the English master concept **`LinkedInInsights_Mast
 | [concepts/LinkedInInsights_ChatUX.md](concepts/LinkedInInsights_ChatUX.md) | S0–S5 chat templates (`RUN CONFIG`, progress lines) |
 | [experts/](experts/) | `fython` expert bodies (`*.py`) |
 | [scripts/bootstrap_experts.py](scripts/bootstrap_experts.py) | Publishes experts to Extella |
-| [scripts/upload_concepts.py](scripts/upload_concepts.py) | Uploads all `concepts/*.md` via `/api/concept/add` |
+| [scripts/publish_concepts.py](scripts/publish_concepts.py) | `concept/search` → dedupe → `concept/update` (or `concept/add`); see script docstring |
+| [scripts/upload_concepts.py](scripts/upload_concepts.py) | Alias: runs `publish_concepts.py` |
 | [scripts/requirements-scripts.txt](scripts/requirements-scripts.txt) | `requests` for helper scripts |
 
 ## Expert names (exact)
@@ -44,15 +45,19 @@ export EXTELLA_TOKEN="your-token"
 python3 preset_linkedin_insights/scripts/bootstrap_experts.py
 ```
 
-Concepts (one API concept per Markdown file):
+Concepts (idempotent; uses [Concept_update.md](../../Concept_update.md) flow: **`POST /api/concept/update`** after dedupe; **`POST /api/concept/add`** only when no row with `Concept_Slug: …` exists):
 
 ```bash
+python3 preset_linkedin_insights/scripts/publish_concepts.py
+# optional preview:
+python3 preset_linkedin_insights/scripts/publish_concepts.py --dry-run
+# backward-compatible name:
 python3 preset_linkedin_insights/scripts/upload_concepts.py
 ```
 
 ## Concepts import notes
 
-## Smoke test (manual mode)
+Each `concepts/*.md` must contain a line `# Concept_Slug: <ExactName>` (see files). Duplicates with the same slug: script keeps the **highest** `concept_id`, removes older ids, then updates the kept row with the file from disk.
 
 1. Run `linkedin_insights_init_excel_workbook` with a chosen `output_path`.
 2. Run `linkedin_insights_collect_posts_batch` with `manual_posts_json` containing 1–3 example `PostRecord` objects.
